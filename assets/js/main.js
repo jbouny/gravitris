@@ -45,6 +45,7 @@ $( function() {
 	Window.RightCallback = function() { Game.Right(); };
 	Window.UpCallback = function() { Game.Up(); };
 	Window.DownCallback = function() { Game.Down(); };
+	Window.SwipeCallback = function( inX, inY ) { Game.Swipe( inX, inY ); };
 	
 	Display.Select( '2d' );
 	

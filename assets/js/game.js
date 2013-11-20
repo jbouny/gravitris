@@ -104,11 +104,16 @@ var Game = {
 	ms_IsPause: false,
 	ms_B2DWorld: null,
 	ms_B2DShape: null,
+	ms_ImpulseRandoms: [],
+	ms_IdRandom: 0,
 	
 	Initialize: function()
 	{
 		// Initialize 2D Physic
-		this.InitializeBox2D();
+		this.B2DInitialize();
+		
+		for( var i = 0; i < 500; ++i )
+		this.ms_ImpulseRandoms.push( Config.ms_AppliedForce * ( Math.random() - 0.5 ) * 0.15 );
 		
 		// Get an alea shape at the beginning
 		ShapeFactory.Initialize( this.ms_B2DWorld, this.ms_B2DShape );
@@ -116,81 +121,6 @@ var Game = {
 		
 		// Initialize game board
 		this.ms_Blocks = [];
-	},
-	
-	InitializeBox2D: function()
-	{	
-		var aGravity = new Box2D.b2Vec2( 0.0, Config.ms_Gravity );
-		this.ms_B2DWorld = new Box2D.b2World( aGravity, true );
-		
-        var aEdgeShape = new Box2D.b2EdgeShape();
-        aEdgeShape.Set( new Box2D.b2Vec2( -500.0, Config.ms_GameHeight - 0.5 ), new Box2D.b2Vec2( 500.0, Config.ms_GameHeight - 0.5 ) );
-        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
-		
-        aEdgeShape = new Box2D.b2EdgeShape();
-        aEdgeShape.Set( new Box2D.b2Vec2( -0.5, Config.ms_GameHeight * 0.33 ), new Box2D.b2Vec2( -0.5, Config.ms_GameHeight -0.5 ) );
-        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
-		
-        aEdgeShape = new Box2D.b2EdgeShape();
-        aEdgeShape.Set( new Box2D.b2Vec2( Config.ms_GameWidth - 0.5, Config.ms_GameHeight * 0.33 ), new Box2D.b2Vec2( Config.ms_GameWidth - 0.5, Config.ms_GameHeight - 0.5 ) );
-        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
-		
-        this.ms_B2DShape = new Box2D.b2PolygonShape();
-        this.ms_B2DShape.SetAsBox( 0.49, 0.49 );
-	},
-	
-	ReadB2DObject: function( inData, inBody )
-	{
-		var aPos = inBody.GetPosition();
-		inData.x = aPos.get_x();
-		inData.y = aPos.get_y();
-		inData.angle = inBody.GetAngle();
-	},
-	
-	UpdateGravity: function( inTime )
-	{
-		if( this.ms_IsPause )
-			return;
-		Game.ms_B2DWorld.Step(
-			inTime,
-			20,			// velocity iterations
-			20			// position iterations
-		);
-		
-		var aData = { x: 0, y: 0, angle: 0 };
-		if( Game.ms_Shape != null )
-		{
-			for( var i = 0; i < Game.ms_Shape.m_Blocks.length; ++i ) 
-			{
-				var aBlock = Game.ms_Shape.m_Blocks[i];
-				this.ReadB2DObject( aData, aBlock.m_Body );
-				
-				aBlock.m_X = aData.x;
-				aBlock.m_Y = aData.y;
-				aBlock.m_Rotation = aData.angle;
-			}
-		}	
-		for( var i = 0; i < Game.ms_Blocks.length; ++i ) 
-		{
-			var aBlock = Game.ms_Blocks[i];
-			this.ReadB2DObject( aData, aBlock.m_Body );
-			
-			aBlock.m_X = aData.x;
-			aBlock.m_Y = aData.y;
-			aBlock.m_Rotation = aData.angle;
-		}	
-	},
-	
-	Fall: function()
-	{
-		if( this.ms_IsPause )
-			return;
-		
-		// If the current shape is stopped, create a new shape
-		var aShape = this.ms_Shape;
-		this.ms_Shape = ShapeFactory.RandomShape();
-		for( var i = 0; i < aShape.m_Blocks.length; ++i ) 
-			this.ms_Blocks.push( aShape.m_Blocks[i] );
 	},
 	
 	Pause: function() 
@@ -212,15 +142,105 @@ var Game = {
 		this.ms_Blocks = [];
 	},
 	
-	ApplyImpulse: function( inX, inY )
+	Fall: function()
+	{
+		if( this.ms_IsPause )
+			return;
+		
+		// If the current shape is stopped, create a new shape
+		var aShape = this.ms_Shape;
+		this.ms_Shape = ShapeFactory.RandomShape();
+		for( var i = 0; i < aShape.m_Blocks.length; ++i ) 
+			this.ms_Blocks.push( aShape.m_Blocks[i] );
+	},
+	
+	B2DRand: function()
+	{
+		var aRand = this.ms_ImpulseRandoms[this.ms_IdRandom];
+		this.ms_IdRandom = ( this.ms_IdRandom + 1 ) % 500;
+		return aRand;
+	},
+	
+	B2DInitialize: function()
+	{	
+		var aGravity = new Box2D.b2Vec2( 0.0, Config.ms_Gravity );
+		this.ms_B2DWorld = new Box2D.b2World( aGravity, true );
+		
+        var aEdgeShape = new Box2D.b2EdgeShape();
+        aEdgeShape.Set( new Box2D.b2Vec2( -500.0, Config.ms_GameHeight - 0.5 ), new Box2D.b2Vec2( 500.0, Config.ms_GameHeight - 0.5 ) );
+        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
+		
+        aEdgeShape = new Box2D.b2EdgeShape();
+        aEdgeShape.Set( new Box2D.b2Vec2( -0.5, Config.ms_GameHeight * 0.33 ), new Box2D.b2Vec2( -0.5, Config.ms_GameHeight -0.5 ) );
+        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
+		
+        aEdgeShape = new Box2D.b2EdgeShape();
+        aEdgeShape.Set( new Box2D.b2Vec2( Config.ms_GameWidth - 0.5, Config.ms_GameHeight * 0.33 ), new Box2D.b2Vec2( Config.ms_GameWidth - 0.5, Config.ms_GameHeight - 0.5 ) );
+        Game.ms_B2DWorld.CreateBody( new Box2D.b2BodyDef() ).CreateFixture( aEdgeShape, 0.0 );
+		
+        this.ms_B2DShape = new Box2D.b2PolygonShape();
+        this.ms_B2DShape.SetAsBox( 0.49, 0.49 );
+	},
+	
+	B2DReadObject: function( inData, inBody )
+	{
+		var aPos = inBody.GetPosition();
+		inData.x = aPos.get_x();
+		inData.y = aPos.get_y();
+		inData.angle = inBody.GetAngle();
+	},
+	
+	B2DGetImpulse: function( inX, inY )
+	{
+		return new Box2D.b2Vec2( inX + this.B2DRand(), inY + this.B2DRand() );
+	},
+	
+	B2DApplyImpulse: function( inX, inY )
 	{
 		if( this.ms_Shape != null )
 			for( var i = 0; i < this.ms_Shape.m_Blocks.length; ++i )
-				this.ms_Shape.m_Blocks[i].m_Body.ApplyForce( new Box2D.b2Vec2( inX, inY ), this.ms_Shape.m_Blocks[i].m_Body.GetWorldCenter() );
+				this.ms_Shape.m_Blocks[i].m_Body.ApplyForce( this.B2DGetImpulse( inX, inY ), this.ms_Shape.m_Blocks[i].m_Body.GetWorldCenter() );
+		for( var i = 0; i < this.ms_Blocks.length; ++i )
+			this.ms_Blocks[i].m_Body.ApplyForce( this.B2DGetImpulse( inX, inY ), this.ms_Blocks[i].m_Body.GetWorldCenter() );
 	},
 	
-	Left: function() { this.ApplyImpulse( -Config.ms_AppliedForce, 0.0 ); },
-	Up: function() { this.ApplyImpulse( 0.0, -Config.ms_AppliedForce ); },
-	Right: function() { this.ApplyImpulse( Config.ms_AppliedForce, 0.0 ); },
-	Down: function() { this.ApplyImpulse( 0.0, Config.ms_AppliedForce ); },
+	UpdateGravity: function( inTime )
+	{
+		if( this.ms_IsPause )
+			return;
+		Game.ms_B2DWorld.Step(
+			inTime,
+			20,			// velocity iterations
+			20			// position iterations
+		);
+		
+		var aData = { x: 0, y: 0, angle: 0 };
+		if( Game.ms_Shape != null )
+		{
+			for( var i = 0; i < Game.ms_Shape.m_Blocks.length; ++i ) 
+			{
+				var aBlock = Game.ms_Shape.m_Blocks[i];
+				this.B2DReadObject( aData, aBlock.m_Body );
+				
+				aBlock.m_X = aData.x;
+				aBlock.m_Y = aData.y;
+				aBlock.m_Rotation = aData.angle;
+			}
+		}	
+		for( var i = 0; i < Game.ms_Blocks.length; ++i ) 
+		{
+			var aBlock = Game.ms_Blocks[i];
+			this.B2DReadObject( aData, aBlock.m_Body );
+			
+			aBlock.m_X = aData.x;
+			aBlock.m_Y = aData.y;
+			aBlock.m_Rotation = aData.angle;
+		}	
+	},
+	
+	Left: function() { this.B2DApplyImpulse( -Config.ms_AppliedForce, 0.0 ); },
+	Up: function() { this.B2DApplyImpulse( 0.0, -Config.ms_AppliedForce ); },
+	Right: function() { this.B2DApplyImpulse( Config.ms_AppliedForce, 0.0 ); },
+	Down: function() { this.B2DApplyImpulse( 0.0, Config.ms_AppliedForce ); },
+	Swipe: function( inX, inY ) { this.B2DApplyImpulse( inX * Config.ms_AppliedForce, inY * Config.ms_AppliedForce ); },
 };

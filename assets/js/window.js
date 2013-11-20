@@ -41,25 +41,16 @@ var Window = {
 		// Full screen
 		$( '#fullscreen' ).click( function() { Window.CallAction( 70 ); } );
 		
-		// Left
-		var aLeftAction = function( inEvent ) { Window.CallAction( 37 ); inEvent.stopPropagation(); };
-		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "swipeleft", aLeftAction );
-		
-		// Up
-		var aRotateAction = function( inEvent ) { Window.CallAction( 38 ); inEvent.stopPropagation(); };
-		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "swipeup", aRotateAction );
-		
-		// Right
-		var aRightAction = function( inEvent ) { Window.CallAction( 39 ); inEvent.stopPropagation(); };
-		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "swiperight", aRightAction );
-		
-		// Down
-		var aDownAction = function( inEvent ) { Window.CallAction( 40 ); inEvent.stopPropagation(); };
-		
 		// Fall
 		var aFallAction = function( inEvent ) { Window.CallAction( 32 ); inEvent.stopPropagation(); };
-		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "swipedown", aFallAction );
+		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "tap", aFallAction );
 		
+		$( 'body' ).hammer( { swipe_velocity: 0.1 } ).on( "swipe", function( inEvent ) { 
+			inEvent.stopPropagation();
+			var aX = inEvent.gesture.deltaX / ( Window.ms_Width * 0.15 ) ;
+			var aY = inEvent.gesture.deltaY / ( Window.ms_Width * 0.15 );
+			Window.SwipeCallback( aX, aY );
+		} );
 		
 		// Switch view
 		var aSwitchAction = function( inEvent ) { Window.CallAction( 67 ); inEvent.stopPropagation(); };
@@ -116,9 +107,10 @@ var Window = {
 	UpCallback: function() {},
 	RightCallback: function() {},
 	DownCallback: function() {},
+	SwipeCallback: function( inX, inY ) {},
 	PauseCallback: function() {},
 	FallCallback: function() {},
 	ReloadCallback: function() {},
 	NextViewCallback: function() {},
-	PrevViewCallback: function() {}
+	PrevViewCallback: function() {},
 };
